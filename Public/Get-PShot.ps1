@@ -56,7 +56,6 @@ function Get-PShot {
             $IsTaskSequence = $true
             $LogPath = $TSEnv.Value('LogPath')
             $SMSTSLogPath = $TSEnv.Value('_SMSTSLogPath')
-            Write-Host "Task Sequence is running"
         }
         catch [System.Exception] {
             $IsTaskSequence = $false
@@ -72,7 +71,7 @@ function Get-PShot {
             } elseif ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
                 $AutoPath = Join-Path -Path $SMSTSLogPath -ChildPath "PShots"
             } elseif ($env:SystemDrive -eq 'X:') {
-                $AutoPath = 'X:\MININT\SMSOSD\OSDLOGS\PShots'
+                $AutoPath = 'X:\PShots'
             } elseif (Test-Path $MyPictures) {
                 $AutoPath = Join-Path -Path $MyPictures -ChildPath "PShots"
             } else {
@@ -133,7 +132,6 @@ function Get-PShot {
                 $IsTaskSequence = $true
                 $LogPath = $TSEnv.Value('LogPath')
                 $SMSTSLogPath = $TSEnv.Value('_SMSTSLogPath')
-                Write-Host "Task Sequence is running"
             }
             catch [System.Exception] {
                 $IsTaskSequence = $false
@@ -149,7 +147,7 @@ function Get-PShot {
                 } elseif ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
                     $AutoPath = Join-Path -Path $SMSTSLogPath -ChildPath "PShots"
                 } elseif ($env:SystemDrive -eq 'X:') {
-                    $AutoPath = 'X:\MININT\SMSOSD\OSDLOGS\PShots'
+                    $AutoPath = 'X:\PShots'
                 } elseif (Test-Path $MyPictures) {
                     $AutoPath = Join-Path -Path $MyPictures -ChildPath "PShots"
                 } else {
