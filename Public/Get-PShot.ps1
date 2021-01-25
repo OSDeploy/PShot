@@ -41,6 +41,7 @@ function Get-PShot {
         #	Gather
         #======================================================================================================
         $PShotInfo = $(Invoke-Expression (Get-Content (Get-Module -List PShot).Path -Raw))
+        $MyPictures = (New-Object -ComObject Shell.Application).NameSpace('shell:My Pictures').Self.Path
         #======================================================================================================
         #	Adjust Delay
         #======================================================================================================
@@ -48,22 +49,30 @@ function Get-PShot {
         #======================================================================================================
         #	Determine Task Sequence
         #======================================================================================================
+        $LogPath = ''
+        $SMSTSLogPath = ''
         try {
             $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction SilentlyContinue
             $IsTaskSequence = $true
+            $LogPath = $TSEnv.Value('LogPath')
             $SMSTSLogPath = $TSEnv.Value('_SMSTSLogPath')
+            Write-Host "Task Sequence is running"
         }
         catch [System.Exception] {
             $IsTaskSequence = $false
+            $LogPath = ''
             $SMSTSLogPath = ''
         }
         #======================================================================================================
         #	Set AutoPath
         #======================================================================================================
         if ($Directory -eq '') {
-            $MyPictures = (New-Object -ComObject Shell.Application).NameSpace('shell:My Pictures').Self.Path
-            if ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
+            if ($IsTaskSequence -and (Test-Path $LogPath)) {
+                $AutoPath = Join-Path -Path $LogPath -ChildPath "PShots"
+            } elseif ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
                 $AutoPath = Join-Path -Path $SMSTSLogPath -ChildPath "PShots"
+            } elseif ($env:SystemDrive -eq 'X:') {
+                $AutoPath = 'X:\MININT\SMSOSD\OSDLOGS\PShots'
             } elseif (Test-Path $MyPictures) {
                 $AutoPath = Join-Path -Path $MyPictures -ChildPath "PShots"
             } else {
@@ -83,7 +92,7 @@ function Get-PShot {
         Write-Verbose ''
         Write-Verbose '-Directory   Directory where the screenshots will be saved'
         Write-Verbose '             If this value is not set, Path will be automatically set between the following:'
-        Write-Verbose '             Defaults = [_SMSTSLogPath\PShots] [My Pictures\Pshots] [$Env:TEMP\PShots]'
+        Write-Verbose '             Defaults = [LogPath\PShots] [_SMSTSLogPath\PShots] [My Pictures\Pshots] [$Env:TEMP\PShots]'
         Write-Verbose "             Value = $AutoPath"
         Write-Verbose ''
         $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
@@ -117,22 +126,30 @@ function Get-PShot {
             #======================================================================================================
             #	Determine Task Sequence (Process Block)
             #======================================================================================================
+            $LogPath = ''
+            $SMSTSLogPath = ''
             try {
                 $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction SilentlyContinue
                 $IsTaskSequence = $true
+                $LogPath = $TSEnv.Value('LogPath')
                 $SMSTSLogPath = $TSEnv.Value('_SMSTSLogPath')
+                Write-Host "Task Sequence is running"
             }
             catch [System.Exception] {
                 $IsTaskSequence = $false
+                $LogPath = ''
                 $SMSTSLogPath = ''
             }
             #======================================================================================================
             #	Set AutoPath (Process Block)
             #======================================================================================================
             if ($Directory -eq '') {
-                $MyPictures = (New-Object -ComObject Shell.Application).NameSpace('shell:My Pictures').Self.Path
-                if ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
+                if ($IsTaskSequence -and (Test-Path $LogPath)) {
+                    $AutoPath = Join-Path -Path $LogPath -ChildPath "PShots"
+                } elseif ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
                     $AutoPath = Join-Path -Path $SMSTSLogPath -ChildPath "PShots"
+                } elseif ($env:SystemDrive -eq 'X:') {
+                    $AutoPath = 'X:\MININT\SMSOSD\OSDLOGS\PShots'
                 } elseif (Test-Path $MyPictures) {
                     $AutoPath = Join-Path -Path $MyPictures -ChildPath "PShots"
                 } else {
