@@ -4,13 +4,12 @@ https://www.osdeploy.com/modules/pshot
 
 Here's a quick example:
 
-PS C:\> PShot -Verbose
+PShot -Verbose
 VERBOSE: Loading module from path 'D:\GitHub\Modules\PShot\PShot.psm1'.
 VERBOSE: ======================================================================================================
 VERBOSE: PShot 21.1.25.1
 VERBOSE: Take Screenshots in Windows and WinPE with Get-PShot
 VERBOSE: ======================================================================================================
-VERBOSE: Get-PShot [[-Path] <String>] [[-Prefix] <String>] [[-Delay] <UInt32>] [[-Count] <UInt32>] [-Clipboard]
 VERBOSE:
 VERBOSE: -Path       Directory where the screenshots will be saved
 VERBOSE:             Default = $Env:TEMP\PShots
