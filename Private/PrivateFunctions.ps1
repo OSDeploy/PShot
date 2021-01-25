@@ -37,7 +37,7 @@ function Get-PShotPrimaryScreen {
   Param ()
 
   Add-Type -Assembly System.Windows.Forms
-  Return [System.Windows.Forms.SystemInformation]::PrimaryScreen
+  Return [System.Windows.Forms.SystemInformation]::PrimaryMonitorSize
 }
 function Get-PShotVirtualScreen {
   [CmdletBinding()]

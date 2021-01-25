@@ -3,7 +3,7 @@
 Captures a PowerShell Screenshot
 
 .DESCRIPTION
-Captures a PowerShell Screenshot and saves the image in the -PATH $Env:TEMP\PShot by default
+Captures a PowerShell Screenshot and saves the image in the -Directory $Env:TEMP\PShot by default
 
 .LINK
 https://osdeploy.com/module/functions/get-pshot
@@ -16,7 +16,7 @@ function Get-PShot {
     Param (
         #Directory where the screenshots will be saved
         #Default = $Env:TEMP\PShots
-        [string]$Path = "$Env:TEMP\PShot",
+        [string]$Directory = $null,
 
         #Saved files will have a PShot prefix in the filename
         [string]$Prefix = 'PShot',
@@ -31,7 +31,10 @@ function Get-PShot {
         [uint32]$Count = 1,
 
         #Additionally copies the PShot to the Clipboard
-        [switch]$Clipboard = $false
+        [switch]$Clipboard = $false,
+
+        #Screenshot of the Primary Display only
+        [switch]$Primary = $false
     )
     begin {
         #======================================================================================================
@@ -43,44 +46,65 @@ function Get-PShot {
         #======================================================================================================
         if ($Count -gt '1') {if ($Delay -eq 0) {$Delay = 1}}
         #======================================================================================================
+        #	Determine Task Sequence
+        #======================================================================================================
+        try {
+            $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction SilentlyContinue
+            $IsTaskSequence = $true
+            $SMSTSLogPath = $TSEnv.Value('_SMSTSLogPath')
+        }
+        catch [System.Exception] {
+            $IsTaskSequence = $false
+            $SMSTSLogPath = ''
+        }
+        #======================================================================================================
+        #	Set AutoPath
+        #======================================================================================================
+        if ($Directory -eq '') {
+            $MyPictures = (New-Object -ComObject Shell.Application).NameSpace('shell:My Pictures').Self.Path
+            if ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
+                $AutoPath = Join-Path -Path $SMSTSLogPath -ChildPath "PShots"
+            } elseif (Test-Path $MyPictures) {
+                $AutoPath = Join-Path -Path $MyPictures -ChildPath "PShots"
+            } else {
+                $AutoPath = "$Env:TEMP\PShots"
+            }
+        } else {
+            $AutoPath = $Directory
+        }
+        #======================================================================================================
         #	Usage
         #======================================================================================================
         Write-Verbose '======================================================================================================'
         Write-Verbose "PShot $($PShotInfo.ModuleVersion)"
         Write-Verbose "$($PShotInfo.Description)"
         Write-Verbose '======================================================================================================'
-        Write-Verbose 'Get-PShot [[-Path] <String>] [[-Prefix] <String>] [[-Delay] <UInt32>] [[-Count] <UInt32>] [-Clipboard]'
+        Write-Verbose 'Get-PShot [[-Directory] <String>] [[-Prefix] <String>] [[-Delay] <UInt32>] [[-Count] <UInt32>] [-Clipboard] [-Primary]'
         Write-Verbose ''
-        Write-Verbose '-Path       Directory where the screenshots will be saved'
-        if (!(Test-Path "$Path")) {
-            Write-Verbose '            Directory does not exist and will be created'
-        }
-        Write-Verbose '            Default = $Env:TEMP\PShots'
-        Write-Verbose "            Value = $Path"
+        Write-Verbose '-Directory   Directory where the screenshots will be saved'
+        Write-Verbose '             If this value is not set, Path will be automatically set between the following:'
+        Write-Verbose '             Defaults = [_SMSTSLogPath\PShots] [My Pictures\Pshots] [$Env:TEMP\PShots]'
+        Write-Verbose "             Value = $AutoPath"
         Write-Verbose ''
         $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
-        Write-Verbose "-Prefix     Pattern in the file name $($Prefix)_$($DateString).png"
-        Write-Verbose "            Default = PShot"
-        Write-Verbose "            Value = $Prefix"
+        Write-Verbose "-Prefix      Pattern in the file name $($Prefix)_$($DateString).png"
+        Write-Verbose "             Default = PShot"
+        Write-Verbose "             Value = $Prefix"
         Write-Verbose ''
-        Write-Verbose '-Count      Total number of screenshots to capture'
-        Write-Verbose '            Default = 1'
-        Write-Verbose "            Value = $Count"
+        Write-Verbose '-Count       Total number of screenshots to capture'
+        Write-Verbose '             Default = 1'
+        Write-Verbose "             Value = $Count"
         Write-Verbose ''
-        Write-Verbose '-Delay      Delay before capturing the screenshots in seconds'
-        Write-Verbose '            Default = 0 (Count = 1) | Default = 1 (Count > 1)'
-        Write-Verbose "            Value = $Delay"
+        Write-Verbose '-Delay       Delay before capturing the screenshots in seconds'
+        Write-Verbose '             Default = 0 (Count = 1) | Default = 1 (Count > 1)'
+        Write-Verbose "             Value = $Delay"
         Write-Verbose ''
-        Write-Verbose '-Clipboard  Additionally copies the screenshot to the Clipboard'
-        Write-Verbose "            Value = $Clipboard"
+        Write-Verbose '-Clipboard   Additionally copies the screenshot to the Clipboard'
+        Write-Verbose "             Value = $Clipboard"
+        Write-Verbose ''
+        Write-Verbose '-Primary     Captures screenshot from the Primary Display only for Multiple Displays'
+        Write-Verbose "             Value = $Primary"
         Write-Verbose '======================================================================================================'
-        #======================================================================================================
-        #	Create Folder
-        #======================================================================================================
-        if (!(Test-Path "$Path")) {
-            Write-Verbose "Creating snapshot directory at $Path"
-            New-Item -Path "$Path" -ItemType Directory -Force -ErrorAction Stop | Out-Null
-        }
         #======================================================================================================
         #	Load Assemblies
         #======================================================================================================
@@ -91,6 +115,41 @@ function Get-PShot {
     process {
         foreach ($i in 1..$Count) {
             #======================================================================================================
+            #	Determine Task Sequence (Process Block)
+            #======================================================================================================
+            try {
+                $TSEnv = New-Object -ComObject Microsoft.SMS.TSEnvironment -ErrorAction SilentlyContinue
+                $IsTaskSequence = $true
+                $SMSTSLogPath = $TSEnv.Value('_SMSTSLogPath')
+            }
+            catch [System.Exception] {
+                $IsTaskSequence = $false
+                $SMSTSLogPath = ''
+            }
+            #======================================================================================================
+            #	Set AutoPath (Process Block)
+            #======================================================================================================
+            if ($Directory -eq '') {
+                $MyPictures = (New-Object -ComObject Shell.Application).NameSpace('shell:My Pictures').Self.Path
+                if ($IsTaskSequence -and (Test-Path $SMSTSLogPath)) {
+                    $AutoPath = Join-Path -Path $SMSTSLogPath -ChildPath "PShots"
+                } elseif (Test-Path $MyPictures) {
+                    $AutoPath = Join-Path -Path $MyPictures -ChildPath "PShots"
+                } else {
+                    $AutoPath = "$Env:TEMP\PShots"
+                }
+            } else {
+                $AutoPath = $Directory
+            }
+            Write-Verbose "AutoPath is set to $AutoPath"
+            #======================================================================================================
+            #	Determine AutoPath
+            #======================================================================================================
+            if (!(Test-Path "$AutoPath")) {
+                Write-Verbose "Creating snapshot directory at $AutoPath"
+                New-Item -Path "$AutoPath" -ItemType Directory -Force -ErrorAction Stop | Out-Null
+            }
+            #======================================================================================================
             #	DPI Scaling
             #======================================================================================================
             $PShotDpiScaling = Get-PShotDpiScaling
@@ -98,9 +157,13 @@ function Get-PShot {
             #======================================================================================================
             #	Screen Resolution
             #======================================================================================================
-            #$PShotScreen = Get-PShotPrimaryScreen
-            $PShotScreen = Get-PShotVirtualScreen
-            Write-Verbose "Screen resolution is $($PShotScreen.Width) x $($PShotScreen.Height)"
+            if ($Primary) {
+                Write-Verbose "Gathering Primary Display only"
+                $PShotScreen = Get-PShotPrimaryScreen  
+            } else {
+                $PShotScreen = Get-PShotVirtualScreen
+            }
+            Write-Verbose "Virtual Screen resolution is $($PShotScreen.Width) x $($PShotScreen.Height)"
     
             # Get Physical Screen Resolution
             [int32]$PShotScreenWidth = [math]::round($(($PShotScreen.Width * $PShotDpiScaling) / 100), 0)
@@ -133,13 +196,17 @@ function Get-PShot {
             #======================================================================================================
             $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
             $FileName = "$($Prefix)_$($DateString).png"
-            Write-Verbose "Saving PShot $i of $Count to to $Path\$FileName"
-            $PShotBitmap.Save("$Path\$FileName")
+            Write-Verbose "Saving PShot $i of $Count to to $AutoPath\$FileName"
+            $PShotBitmap.Save("$AutoPath\$FileName")
             #======================================================================================================
             #	Close
             #======================================================================================================
             $PShotGraphics.Dispose()
             $PShotBitmap.Dispose()
+            #======================================================================================================
+            #	Return Get-Item
+            #======================================================================================================
+            Get-Item "$AutoPath\$FileName"
             #======================================================================================================
         }
     }
