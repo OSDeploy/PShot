@@ -32,6 +32,13 @@ public class DPI {
 '@ -ReferencedAssemblies 'System.Drawing.dll' -ErrorAction Stop
   Return [DPI]::scaling() * 100
 }
+function Get-PShotPrimaryScreen {
+  [CmdletBinding()]
+  Param ()
+
+  Add-Type -Assembly System.Windows.Forms
+  Return [System.Windows.Forms.SystemInformation]::PrimaryScreen
+}
 function Get-PShotVirtualScreen {
   [CmdletBinding()]
   Param ()
@@ -43,6 +50,5 @@ function New-PShotBitmap {
   [CmdletBinding()]
   Param ()
   
-  Add-Type -Assembly System.Windows.Forms
-  Return New-Object System.Drawing.Bitmap $PShotVirtualScreenWidth, $PShotVirtualScreenHeight
+  Return New-Object System.Drawing.Bitmap $PShotScreenWidth, $PShotScreenHeight
 }

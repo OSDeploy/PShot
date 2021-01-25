@@ -7,7 +7,7 @@
 RootModule = 'PShot.psm1'
 
 # Version number of his module.
-ModuleVersion = '21.1.24.1'
+ModuleVersion = '21.1.25.1'
 
 # ID used to uniquely identify this module
 GUID = 'c9a158b9-a0bb-43c3-8f76-2689773e994d'

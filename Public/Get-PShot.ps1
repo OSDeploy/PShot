@@ -33,106 +33,115 @@ function Get-PShot {
         #Additionally copies the PShot to the Clipboard
         [switch]$Clipboard = $false
     )
-    #======================================================================================================
-    #	Gather
-    #======================================================================================================
-    $PShotInfo = $(Invoke-Expression (Get-Content (Get-Module -List PShot).Path -Raw))
-    #======================================================================================================
-    #	Adjust Delay
-    #======================================================================================================
-    if ($Count -gt '1') {if ($Delay -eq 0) {$Delay = 1}}
-    #======================================================================================================
-    #	Usage
-    #======================================================================================================
-    Write-Verbose '======================================================================================================'
-    Write-Verbose "PShot $($PShotInfo.ModuleVersion)"
-    Write-Verbose "$($PShotInfo.Description)"
-    Write-Verbose '======================================================================================================'
-    Write-Verbose 'Get-PShot [[-Path] <String>] [[-Prefix] <String>] [[-Delay] <UInt32>] [[-Count] <UInt32>] [-Clipboard]'
-    Write-Verbose ''
-    Write-Verbose '-Path       Directory where the screenshots will be saved'
-    if (!(Test-Path "$Path")) {
-        Write-Verbose '            Directory does not exist and will be created'
-    }
-    Write-Verbose '            Default = $Env:TEMP\PShots'
-    Write-Verbose "            Value = $Path"
-    Write-Verbose ''
-    $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
-    Write-Verbose "-Prefix     Pattern in the file name $($Prefix)_$($DateString).png"
-    Write-Verbose "            Default = PShot"
-    Write-Verbose "            Value = $Prefix"
-    Write-Verbose ''
-    Write-Verbose '-Count      Total number of screenshots to capture'
-    Write-Verbose '            Default = 1'
-    Write-Verbose "            Value = $Count"
-    Write-Verbose ''
-    Write-Verbose '-Delay      Delay before capturing the screenshots in seconds'
-    Write-Verbose '            Default = 0 (Count = 1) | Default = 1 (Count > 1)'
-    Write-Verbose "            Value = $Delay"
-    Write-Verbose ''
-    Write-Verbose '-Clipboard  Additionally copies the screenshot to the Clipboard'
-    Write-Verbose "            Value = $Clipboard"
-    Write-Verbose '======================================================================================================'
-    #======================================================================================================
-    #	DPI Scaling
-    #======================================================================================================
-    $PShotDpiScaling = Get-PShotDpiScaling
-    Write-Verbose "Screen DPI Scaling is $([Math]::round($PShotDpiScaling, 0)) Percent"
-    #======================================================================================================
-    #	Screen Resolution
-    #======================================================================================================
-    $PShotVirtualScreen = Get-PShotVirtualScreen
-    Write-Verbose "Virtual Screen resolution is $($PShotVirtualScreen.Width) x $($PShotVirtualScreen.Height)"
-
-    # Get Physical Screen Resolution
-    [int32]$PShotVirtualScreenWidth = [math]::round($(($PShotVirtualScreen.Width * $PShotDpiScaling) / 100), 0)
-    [int32]$PShotVirtualScreenHeight = [math]::round($(($PShotVirtualScreen.Height * $PShotDpiScaling) / 100), 0)
-    Write-Verbose "Physical Screen resolution is $($PShotVirtualScreenWidth) x $($PShotVirtualScreenHeight)"
-    #======================================================================================================
-    #	Create Folder
-    #======================================================================================================
-    if (!(Test-Path "$Path")) {
-        Write-Verbose "Creating PShot directory at $Path"
-        New-Item -Path "$Path" -ItemType Directory -Force -ErrorAction Stop | Out-Null
-    }
-    #======================================================================================================
-    #	Delay
-    #======================================================================================================
-    foreach ($i in 1..$Count) {
+    begin {
         #======================================================================================================
-        #	Delay
+        #	Gather
         #======================================================================================================
-        Write-Verbose "Delay $Delay Seconds"
-        Start-Sleep -Seconds $Delay
+        $PShotInfo = $(Invoke-Expression (Get-Content (Get-Module -List PShot).Path -Raw))
         #======================================================================================================
-        #	Generate Bitmap
+        #	Adjust Delay
         #======================================================================================================
-        $PShotBitmap = New-PShotBitmap
-        $PShotGraphics = [System.Drawing.Graphics]::FromImage($PShotBitmap)
-        $PShotGraphics.CopyFromScreen($PShotVirtualScreen.Left, $PShotVirtualScreen.Top, 0, 0, $PShotBitmap.Size)
+        if ($Count -gt '1') {if ($Delay -eq 0) {$Delay = 1}}
         #======================================================================================================
-        #	Copy the PShot to the Clipboard
-        #   https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.clipboard.setimage?view=net-5.0
+        #	Usage
         #======================================================================================================
-        if ($Clipboard) {
-            Write-Verbose "Copying PShot to the Clipboard"
-            Add-Type -Assembly System.Drawing
-            Add-Type -Assembly System.Windows.Forms
-            [System.Windows.Forms.Clipboard]::SetImage($PShotBitmap)
+        Write-Verbose '======================================================================================================'
+        Write-Verbose "PShot $($PShotInfo.ModuleVersion)"
+        Write-Verbose "$($PShotInfo.Description)"
+        Write-Verbose '======================================================================================================'
+        Write-Verbose 'Get-PShot [[-Path] <String>] [[-Prefix] <String>] [[-Delay] <UInt32>] [[-Count] <UInt32>] [-Clipboard]'
+        Write-Verbose ''
+        Write-Verbose '-Path       Directory where the screenshots will be saved'
+        if (!(Test-Path "$Path")) {
+            Write-Verbose '            Directory does not exist and will be created'
+        }
+        Write-Verbose '            Default = $Env:TEMP\PShots'
+        Write-Verbose "            Value = $Path"
+        Write-Verbose ''
+        $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
+        Write-Verbose "-Prefix     Pattern in the file name $($Prefix)_$($DateString).png"
+        Write-Verbose "            Default = PShot"
+        Write-Verbose "            Value = $Prefix"
+        Write-Verbose ''
+        Write-Verbose '-Count      Total number of screenshots to capture'
+        Write-Verbose '            Default = 1'
+        Write-Verbose "            Value = $Count"
+        Write-Verbose ''
+        Write-Verbose '-Delay      Delay before capturing the screenshots in seconds'
+        Write-Verbose '            Default = 0 (Count = 1) | Default = 1 (Count > 1)'
+        Write-Verbose "            Value = $Delay"
+        Write-Verbose ''
+        Write-Verbose '-Clipboard  Additionally copies the screenshot to the Clipboard'
+        Write-Verbose "            Value = $Clipboard"
+        Write-Verbose '======================================================================================================'
+        #======================================================================================================
+        #	Create Folder
+        #======================================================================================================
+        if (!(Test-Path "$Path")) {
+            Write-Verbose "Creating snapshot directory at $Path"
+            New-Item -Path "$Path" -ItemType Directory -Force -ErrorAction Stop | Out-Null
         }
         #======================================================================================================
-        #	Save the PShot to File
-        #   https://docs.microsoft.com/en-us/dotnet/api/system.drawing.image.tag?view=dotnet-plat-ext-5.0
+        #	Load Assemblies
         #======================================================================================================
-        $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
-        $FileName = "$($Prefix)_$($DateString).png"
-        Write-Verbose "Saving PShot $i of $Count to to $Path\$FileName"
-        $PShotBitmap.Save("$Path\$FileName")
+        Add-Type -Assembly System.Drawing
+        Add-Type -Assembly System.Windows.Forms
+        #======================================================================================================
     }
-    #======================================================================================================
-    #	Close
-    #======================================================================================================
-    $PShotGraphics.Dispose()
-    $PShotBitmap.Dispose()
-    #======================================================================================================
+    process {
+        foreach ($i in 1..$Count) {
+            #======================================================================================================
+            #	DPI Scaling
+            #======================================================================================================
+            $PShotDpiScaling = Get-PShotDpiScaling
+            Write-Verbose "Screen DPI Scaling is $([Math]::round($PShotDpiScaling, 0)) Percent"
+            #======================================================================================================
+            #	Screen Resolution
+            #======================================================================================================
+            #$PShotScreen = Get-PShotPrimaryScreen
+            $PShotScreen = Get-PShotVirtualScreen
+            Write-Verbose "Screen resolution is $($PShotScreen.Width) x $($PShotScreen.Height)"
+    
+            # Get Physical Screen Resolution
+            [int32]$PShotScreenWidth = [math]::round($(($PShotScreen.Width * $PShotDpiScaling) / 100), 0)
+            [int32]$PShotScreenHeight = [math]::round($(($PShotScreen.Height * $PShotDpiScaling) / 100), 0)
+            Write-Verbose "Physical Screen resolution is $($PShotScreenWidth) x $($PShotScreenHeight)"
+            #======================================================================================================
+            #	Delay
+            #======================================================================================================
+            Write-Verbose "Delay $Delay Seconds"
+            Start-Sleep -Seconds $Delay
+            #======================================================================================================
+            #	Generate Bitmap
+            #======================================================================================================
+            $PShotBitmap = New-PShotBitmap
+            $PShotGraphics = [System.Drawing.Graphics]::FromImage($PShotBitmap)
+            $PShotGraphics.CopyFromScreen($PShotScreen.Left, $PShotScreen.Top, 0, 0, $PShotBitmap.Size)
+            #======================================================================================================
+            #	Copy the PShot to the Clipboard
+            #   https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.clipboard.setimage?view=net-5.0
+            #======================================================================================================
+            if ($Clipboard) {
+                Write-Verbose "Copying PShot to the Clipboard"
+                Add-Type -Assembly System.Drawing
+                Add-Type -Assembly System.Windows.Forms
+                [System.Windows.Forms.Clipboard]::SetImage($PShotBitmap)
+            }
+            #======================================================================================================
+            #	Save the PShot to File
+            #   https://docs.microsoft.com/en-us/dotnet/api/system.drawing.image.tag?view=dotnet-plat-ext-5.0
+            #======================================================================================================
+            $DateString = (Get-Date).ToString('yyyyMMdd_HHmmss')
+            $FileName = "$($Prefix)_$($DateString).png"
+            Write-Verbose "Saving PShot $i of $Count to to $Path\$FileName"
+            $PShotBitmap.Save("$Path\$FileName")
+            #======================================================================================================
+            #	Close
+            #======================================================================================================
+            $PShotGraphics.Dispose()
+            $PShotBitmap.Dispose()
+            #======================================================================================================
+        }
+    }
+    End {}
 }
