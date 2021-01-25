@@ -141,6 +141,7 @@ function Get-PShot {
             #======================================================================================================
             #	Set AutoPath (Process Block)
             #======================================================================================================
+            $AutoPathBackup = $AutoPath
             if ($Directory -eq '') {
                 if ($IsTaskSequence -and (Test-Path $LogPath)) {
                     $AutoPath = Join-Path -Path $LogPath -ChildPath "PShots"
@@ -157,6 +158,12 @@ function Get-PShot {
                 $AutoPath = $Directory
             }
             Write-Verbose "AutoPath is set to $AutoPath"
+            #======================================================================================================
+            #	AutoPathBackup
+            #======================================================================================================
+            if ($AutoPathBackup -ne $AutoPath) {
+                #Path changed, so need to move the content from the previous AutoPath
+            }
             #======================================================================================================
             #	Determine AutoPath
             #======================================================================================================
