@@ -6,10 +6,11 @@ Captures a PowerShell Screenshot
 Captures a PowerShell Screenshot and saves the image in the -Directory $Env:TEMP\PShot by default
 
 .LINK
-https://osdeploy.com/module/functions/get-pshot
+https://www.osdeploy.com/modules/pshot/usage
 
 .NOTES
 21.1.23 Initial Release
+
 #>
 function Get-PShot {
     [CmdletBinding()]
@@ -40,7 +41,13 @@ function Get-PShot {
         #======================================================================================================
         #	Gather
         #======================================================================================================
-        $PShotInfo = $(Invoke-Expression (Get-Content (Get-Module -List PShot).Path -Raw))
+        $GetCommandNoun = Get-Command -Name Get-PShot | Select-Object -ExpandProperty Noun
+        $GetCommandVersion = Get-Command -Name Get-PShot | Select-Object -ExpandProperty Version
+        $GetCommandHelpUri = Get-Command -Name Get-PShot | Select-Object -ExpandProperty HelpUri
+        $GetCommandModule = Get-Command -Name Get-PShot | Select-Object -ExpandProperty Module
+        $GetModuleDescription = Get-Module -Name $GetCommandModule | Select-Object -ExpandProperty Description
+        $GetModuleProjectUri = Get-Module -Name $GetCommandModule | Select-Object -ExpandProperty ProjectUri
+        $GetModulePath = Get-Module -Name $GetCommandModule | Select-Object -ExpandProperty Path
         $MyPictures = (New-Object -ComObject Shell.Application).NameSpace('shell:My Pictures').Self.Path
         #======================================================================================================
         #	Adjust Delay
@@ -84,8 +91,9 @@ function Get-PShot {
         #	Usage
         #======================================================================================================
         Write-Verbose '======================================================================================================'
-        Write-Verbose "PShot $($PShotInfo.ModuleVersion)"
-        Write-Verbose "$($PShotInfo.Description)"
+        Write-Verbose "$GetCommandNoun $GetCommandVersion $GetCommandHelpUri"
+        Write-Verbose $GetModuleDescription
+        Write-Verbose "Module Path: $GetModulePath"
         Write-Verbose '======================================================================================================'
         Write-Verbose 'Get-PShot [[-Directory] <String>] [[-Prefix] <String>] [[-Delay] <UInt32>] [[-Count] <UInt32>] [-Clipboard] [-Primary]'
         Write-Verbose ''
